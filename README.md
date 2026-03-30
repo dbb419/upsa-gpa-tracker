@@ -1,2 +1,2 @@
 # upsa-gpa-tracker
-Boost your Academcis
+Boost your Academcics
