@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
 
+# --- PAGE SETUP ---
 st.set_page_config(page_title="UPSA GPA Planner", page_icon="🎓")
 
-# --- OFFICIAL UPSA GRADING LOGIC ---
+# --- OFFICIAL UPSA GRADING LOGIC (From 2026 Flyer) ---
 def get_grade_info(score):
     if score >= 80: return "A", "Excellent", 4.0
     elif score >= 75: return "B+", "Very Good", 3.5
@@ -15,6 +16,7 @@ def get_grade_info(score):
     elif score >= 45: return "D", "Unsatisfactory", 0.5
     else: return "F", "Fail", 0.0
 
+# Initialize the storage for this session
 if 'grade_data' not in st.session_state:
     st.session_state.grade_data = []
 
@@ -54,7 +56,7 @@ if st.session_state.grade_data:
         st.metric("Current GPA", f"{current_gpa:.2f}")
     
     with col_class:
-        # Graduation Class Logic from the Flyer
+        # Graduation Class Logic from UPSA Flyer
         if current_gpa >= 3.6: standing = "1st Class"
         elif current_gpa >= 3.0: standing = "2nd Class Upper"
         elif current_gpa >= 2.5: standing = "2nd Class Lower"
@@ -69,17 +71,33 @@ if st.session_state.grade_data:
     target_gpa = st.slider("What is your goal GPA?", 1.0, 4.0, 3.5, 0.1)
     remaining_courses = st.number_input("How many courses left this semester?", 1, 10, 1)
 
+    # The Math: (Total Points Needed - Current Points) / Remaining Courses
     total_points_needed = target_gpa * (num_courses + remaining_courses)
     current_total_points = df["Points"].sum()
     points_needed_per_course = (total_points_needed - current_total_points) / remaining_courses
 
     if points_needed_per_course > 4.0:
-        st.error(f"⚠️ To hit {target_gpa}, you need {points_needed_per_course:.2f} per course. That's above an A!")
+        st.error(f"⚠️ To hit {target_gpa}, you need {points_needed_per_course:.2f} GP per course. (Above an A!)")
     elif points_needed_per_course <= 0:
-        st.success(f"✅ You've already secured a {target_gpa}!")
+        st.success(f"✅ You've already secured a {target_gpa} GPA! Just keep passing.")
     else:
         st.info(f"💡 To reach **{target_gpa}**, aim for an average of **{points_needed_per_course:.2f} GP** in your next {remaining_courses} courses.")
         
     if st.button("Clear All Data"):
         st.session_state.grade_data = []
         st.rerun()
+
+# --- SECTION 4: SUPPORT & FEEDBACK ---
+st.divider()
+st.subheader("🙋‍♂️ Support & Feedback")
+st.write("Found a bug or need help? Chat with the developer!")
+
+whatsapp_number = "233553754858"
+auto_message = "Hi%20Carcious,%20I'm%20using%20the%20GPA%20Planner%20and%20I%20have%20a%20question%20or%20feedback!"
+whatsapp_link = f"https://wa.me/{whatsapp_number}?text={auto_message}"
+
+col_wa, col_empty = st.columns([1, 2])
+with col_wa:
+    st.link_button("Chat on WhatsApp", whatsapp_link, type="primary")
+
+st.caption("Developed by Carcious | Level 100 Management Studies (UPSA)")
