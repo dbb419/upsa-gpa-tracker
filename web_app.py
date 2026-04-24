@@ -7,13 +7,13 @@ import urllib.parse
 st.set_page_config(page_title="UPSA GPA Tracker", page_icon="🎓", layout="centered")
 
 st.title("🎓 Carcious UPSA GPA Tracker")
-st.write("Official UPSA Grading System (Degree & Diploma)")
+st.write("Official UPSA Grading System for Degree & Diploma Students")
 
 # Initialize session state for grades
 if 'df' not in st.session_state:
     st.session_state.df = pd.DataFrame(columns=['Course', 'Score', 'Grade', 'GP'])
 
-# 2. OFFICIAL UPSA GRADING LOGIC (As per flyer)
+# 2. OFFICIAL UPSA GRADING LOGIC (Matched to your flyer)
 def calculate_grade(score_input):
     if score_input >= 80: return "A", 4.0        # Excellent
     elif score_input >= 75: return "B+", 3.5     # Very Good
@@ -52,7 +52,7 @@ if not st.session_state.df.empty:
     
     current_cgpa = st.session_state.df['GP'].mean()
     
-    # 5. GRADUATION CLASS LOGIC (Matching Flyer)
+    # 5. OFFICIAL GRADUATION CLASS (Degree scale from flyer)
     if current_cgpa >= 3.6: standing = "First Class"
     elif current_cgpa >= 3.0: standing = "Second Class Upper"
     elif current_cgpa >= 2.5: standing = "Second Class Lower"
@@ -87,12 +87,12 @@ if not st.session_state.df.empty:
     else:
         st.info(f"To reach {target_val}, you need an average GP of **{required_avg:.2f}**.")
 
-    # 7. PDF Generation
+    # 7. PDF Generation (Including the fixes from last night)
     def create_pdf(data_frame, cgpa_val):
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Helvetica", 'B', 16)
-        pdf.cell(200, 10, txt="UPSA GPA Report", ln=True, align='C')
+        pdf.cell(200, 10, txt="UPSA GPA Official Report", ln=True, align='C')
         pdf.ln(10)
         pdf.set_font("Helvetica", size=12)
         for i, row in data_frame.iterrows():
@@ -100,17 +100,13 @@ if not st.session_state.df.empty:
         pdf.ln(10)
         pdf.set_font("Helvetica", 'B', 14)
         pdf.cell(200, 10, txt=f"Final CGPA: {cgpa_val:.2f}", ln=True)
-        pdf_bytes = pdf.output(dest='S')
-        if isinstance(pdf_bytes, bytearray):
-            pdf_bytes = bytes(pdf_bytes)
-        elif isinstance(pdf_bytes, str):
-            pdf_bytes = pdf_bytes.encode('latin-1')
-        return pdf_bytes
+        # Fix: Output returns bytes in fpdf2
+        return pdf.output()
 
     pdf_bytes = create_pdf(st.session_state.df, current_cgpa)
     st.download_button(
         label="📥 Download My Results as PDF", 
-        data=pdf_bytes,
+        data=bytes(pdf_bytes), # Fix: Explicit bytes conversion for Streamlit
         file_name="UPSA_GPA_Report.pdf", 
         mime="application/pdf"
     )
