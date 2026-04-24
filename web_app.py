@@ -7,22 +7,23 @@ import urllib.parse
 st.set_page_config(page_title="UPSA GPA Tracker", page_icon="🎓", layout="centered")
 
 st.title("🎓 Carcious UPSA GPA Tracker")
-st.write("Calculate your CGPA and plan your academic goals based on official UPSA grading.")
+st.write("Official UPSA Grading System (Degree & Diploma)")
 
 # Initialize session state for grades
 if 'df' not in st.session_state:
     st.session_state.df = pd.DataFrame(columns=['Course', 'Score', 'Grade', 'GP'])
 
-# 2. Grading Logic (Official UPSA Scale)
+# 2. OFFICIAL UPSA GRADING LOGIC (As per flyer)
 def calculate_grade(score_input):
-    if score_input >= 80: return "A", 4.0
-    elif score_input >= 75: return "B+", 3.5
-    elif score_input >= 70: return "B", 3.0
-    elif score_input >= 65: return "C+", 2.5
-    elif score_input >= 60: return "C", 2.0
-    elif score_input >= 55: return "D+", 1.5
-    elif score_input >= 50: return "D", 1.0
-    else: return "F", 0.0
+    if score_input >= 80: return "A", 4.0        # Excellent
+    elif score_input >= 75: return "B+", 3.5     # Very Good
+    elif score_input >= 70: return "B", 3.0      # Good
+    elif score_input >= 65: return "B-", 2.5     # Above Average
+    elif score_input >= 60: return "C+", 2.0     # Average
+    elif score_input >= 55: return "C", 1.5      # Below Average
+    elif score_input >= 50: return "C-", 1.0     # Marginal Pass
+    elif score_input >= 45: return "D", 0.5      # Unsatisfactory
+    else: return "F", 0.0                        # Fail
 
 # 3. Input Form
 with st.form("grade_entry_form", clear_on_submit=True):
@@ -51,12 +52,13 @@ if not st.session_state.df.empty:
     
     current_cgpa = st.session_state.df['GP'].mean()
     
-    # Classification Logic
+    # 5. GRADUATION CLASS LOGIC (Matching Flyer)
     if current_cgpa >= 3.6: standing = "First Class"
     elif current_cgpa >= 3.0: standing = "Second Class Upper"
-    elif current_cgpa >= 2.0: standing = "Second Class Lower"
-    elif current_cgpa >= 1.5: standing = "Third Class"
-    else: standing = "Pass/Fail"
+    elif current_cgpa >= 2.5: standing = "Second Class Lower"
+    elif current_cgpa >= 2.0: standing = "Third Class"
+    elif current_cgpa >= 1.0: standing = "Pass"
+    else: standing = "Fail"
 
     col_m1, col_m2 = st.columns(2)
     with col_m1:
@@ -64,7 +66,7 @@ if not st.session_state.df.empty:
     with col_m2:
         st.metric("Standing", standing)
 
-    # 5. Target GPA Calculator
+    # 6. Target GPA Planner
     st.divider()
     st.subheader("🎯 Target GPA Planner")
     t_col1, t_col2 = st.columns(2)
@@ -85,35 +87,38 @@ if not st.session_state.df.empty:
     else:
         st.info(f"To reach {target_val}, you need an average GP of **{required_avg:.2f}**.")
 
-    # 6. PDF Generation (FIXED)
+    # 7. PDF Generation
     def create_pdf(data_frame, cgpa_val):
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", 'B', 16)
+        pdf.set_font("Helvetica", 'B', 16)
         pdf.cell(200, 10, txt="UPSA GPA Report", ln=True, align='C')
         pdf.ln(10)
-        pdf.set_font("Arial", size=12)
+        pdf.set_font("Helvetica", size=12)
         for i, row in data_frame.iterrows():
             pdf.cell(200, 10, txt=f"{row['Course']}: Score {row['Score']} | Grade {row['Grade']} | GP {row['GP']}", ln=True)
         pdf.ln(10)
-        pdf.set_font("Arial", 'B', 14)
+        pdf.set_font("Helvetica", 'B', 14)
         pdf.cell(200, 10, txt=f"Final CGPA: {cgpa_val:.2f}", ln=True)
-        # This returns the PDF as a byte string which Streamlit needs
-        return pdf.output()
+        pdf_bytes = pdf.output(dest='S')
+        if isinstance(pdf_bytes, bytearray):
+            pdf_bytes = bytes(pdf_bytes)
+        elif isinstance(pdf_bytes, str):
+            pdf_bytes = pdf_bytes.encode('latin-1')
+        return pdf_bytes
 
-    # Download Button Logic
     pdf_bytes = create_pdf(st.session_state.df, current_cgpa)
     st.download_button(
         label="📥 Download My Results as PDF", 
-        data=bytes(pdf_bytes), # Explicitly convert to bytes
+        data=pdf_bytes,
         file_name="UPSA_GPA_Report.pdf", 
         mime="application/pdf"
     )
 
 else:
-    st.info("Your record is currently empty.")
+    st.info("Enter your course scores to begin.")
 
-# 7. WhatsApp Support
+# 8. WhatsApp Support & Branding
 st.divider()
 whatsapp_number = "233553754858"
 support_msg = urllib.parse.quote("Hi Carcious, I need help with the GPA Tracker app.")
@@ -121,7 +126,7 @@ wa_link = f"https://wa.me/{whatsapp_number}?text={support_msg}"
 
 st.markdown(f'''
     <div style="text-align: center;">
-        <p>Developed by Carcious Osei</p>
+        <p style="color: gray;">Built for UPSA Students by Carcious Osei</p>
         <a href="{wa_link}" target="_blank">
             <button style="background-color:#25D366; color:white; border:none; padding:12px 24px; border-radius:8px; cursor:pointer; font-weight:bold;">
                 💬 Contact Tech Support
