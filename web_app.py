@@ -92,10 +92,10 @@ if not st.session_state.df.empty:
 else:
     st.info("No grades added yet. Start by entering a course above!")
 
-# 7. WhatsApp Support Section
+# 7. WhatsApp Support Section (Fixed)
 st.divider()
 st.subheader("🛠 Technical Support")
-whatsapp_num = "233550242207"
+whatsapp_num = "233553754858"
 message_text = "Hi Carcious, I'm using your GPA Tracker and I need some help."
 encoded_msg = urllib.parse.quote(message_text)
 whatsapp_url = f"https://wa.me/{whatsapp_num}?text={encoded_msg}"
@@ -106,4 +106,4 @@ st.markdown(f'''
         💬 Contact Support on WhatsApp
     </button>
 </a>
-''', unsafe_content_type=True)
+''', unsafe_allow_html=True)
